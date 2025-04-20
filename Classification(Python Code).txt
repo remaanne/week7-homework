@@ -1,0 +1,73 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+try:
+    df = pd.read_csv('My.csv')
+except FileNotFoundError:
+    print("File not found. Please check the file path.")
+    exit()
+
+# Display the first few rows of the dataset
+print("First few rows of the dataset:")
+print(df.head())
+
+# Display basic statistics
+print("\nBasic statistics of the dataset:")
+print(df.describe())
+
+# Display class distribution
+print("\nClass distribution:")
+print(df['variety'].value_counts())
+
+# ------------------------------
+# Data Preparation
+# ------------------------------
+
+# Separate features and target
+X = df.drop('variety', axis=1).values  # Features
+y = df['variety'].astype('category').cat.codes.values  # Target (encoded)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# ------------------------------
+# Model Training and Evaluation
+# ------------------------------
+
+# Initialize the KNN classifier
+knn = KNeighborsClassifier(n_neighbors=5)
+
+# Train the model
+knn.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred = knn.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"\nAccuracy: {accuracy:.2f}")
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8,6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=df['variety'].unique(), yticklabels=df['variety'].unique())
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Classification Report
+print("\nClassification report:")
+print(classification_report(y_test, y_pred, target_names=df['variety'].unique()))
